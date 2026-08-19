@@ -1,0 +1,8 @@
+PUT http://localhost:8080/courses/2
+Content-Type: application/json
+
+{
+  "name": "Spring Boot Advanced",
+  "duration": "6 Months",
+  "fee": 25000
+}
