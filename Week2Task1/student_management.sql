@@ -41,3 +41,17 @@ WHERE student_id=3;
 Select * from student;
 SELECT * FROM student
 WHERE course='MCA';
+
+USE student_management;
+INSERT INTO student
+(first_name,last_name,age,gender,email,phone,course,city)
+VALUES
+('Amit','Kumar',21,'Male','amit@gmail.com','9876543213','CSE','Delhi'),
+
+('Anjali','Sharma',22,'Female','anjali@gmail.com','9876543214','CSE','Mumbai'),
+
+('Akash','Patel',20,'Male','akash@gmail.com','9876543215','CSE','Pune'),
+
+('Riya','Das',23,'Female','riya@gmail.com','9876543216','ECE','Kolkata'),
+
+('Suman','Roy',24,'Male','suman@gmail.com','9876543217','ME','Chennai');

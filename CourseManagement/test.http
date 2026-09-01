@@ -1,8 +1,84 @@
-PUT http://localhost:8080/courses/2
+### Get all courses
+GET http://localhost:8080/courses/999
+
+### Get course by ID
+GET http://localhost:8080/courses/3
+
+### Add Course
+POST http://localhost:8080/courses
 Content-Type: application/json
 
 {
-  "name": "Spring Boot Advanced",
+  "name": "Angular",
+  "duration": "4 Months",
+  "fee": 20000
+}
+
+### Get all courses
+GET http://localhost:8080/courses
+
+### Add Course
+POST http://localhost:8080/courses
+Content-Type: application/json
+
+{
+  "name": "React JS",
+  "duration": "4 Months",
+  "fee": 22000
+}
+
+### Get all courses
+GET http://localhost:80
+
+
+### Update Course
+PUT http://localhost:8080/courses/5
+Content-Type: application/json
+
+{
+  "name": "React JS Advanced",
   "duration": "6 Months",
-  "fee": 25000
+  "fee": 30000
+}
+
+### Get Updated Course
+GET http://localhost:80
+
+### Delete Course
+DELETE http://localhost:80
+
+### Verify Delete
+GET http://localhost:8080/courses/5
+
+###
+POST http://localhost:8080/courses
+Content-Type: application/json
+
+{
+    "name": "Python",
+    "duration": "5 Months",
+    "fee": 18000
+}
+###
+GET http://localhost:8080/courses/999
+
+
+###
+POST http://localhost:8080/courses
+Content-Type: application/json
+
+{
+  "name": "Python",
+  "duration": "5 Months",
+  "fee": 18000
+}
+
+###
+POST http://localhost:8080/courses
+Content-Type: application/json
+
+{
+  "name": "",
+  "duration": "",
+  "fee": -5000
 }

@@ -1,12 +1,13 @@
-package com.cutm.coursemanagement;
+package com.cutm.day2;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class CourseManagementApplication {
+public class Day2Application {
 
     public static void main(String[] args) {
-        SpringApplication.run(CourseManagementApplication.class, args);
+        SpringApplication.run(Day2Application.class, args);
     }
+
 }
