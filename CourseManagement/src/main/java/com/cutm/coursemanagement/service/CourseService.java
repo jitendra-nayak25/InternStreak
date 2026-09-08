@@ -1,5 +1,8 @@
-package com.cutm.coursemanagement;
+package com.cutm.coursemanagement.service;
 
+import com.cutm.coursemanagement.Course;
+import com.cutm.coursemanagement.CourseNotFoundException;
+import com.cutm.coursemanagement.repository.CourseRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
