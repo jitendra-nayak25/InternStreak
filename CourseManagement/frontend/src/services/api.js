@@ -1,6 +1,5 @@
 
-const API_URL = "http://localhost:8080";
-
+const API_URL = "https://internstreak-coursemanagement.up.railway.app";
 
 // LOGIN
 export async function loginUser(username, password) {
