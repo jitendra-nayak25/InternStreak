@@ -4,8 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./index.css";
 
 import App from "./App";
-import Payment from "./Payment";
-
+import Payment from "./payment";
 createRoot(document.getElementById("root")).render(
     <StrictMode>
         <BrowserRouter>
