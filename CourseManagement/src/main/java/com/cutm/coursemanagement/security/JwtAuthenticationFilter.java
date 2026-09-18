@@ -1,5 +1,7 @@
 package com.cutm.coursemanagement.security;
 
+import com.cutm.coursemanagement.service.CustomUserDetailsService;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,23 +10,23 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
 @Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+public class JwtAuthenticationFilter
+        extends org.springframework.web.filter.OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+    private final CustomUserDetailsService userDetailsService;
 
     public JwtAuthenticationFilter(
             JwtService jwtService,
-            UserDetailsService userDetailsService) {
+            CustomUserDetailsService userDetailsService) {
 
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
@@ -37,73 +39,59 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Get Authorization header
-        final String authHeader =
-                request.getHeader("Authorization");
-
-
-        // Check whether JWT exists
-        if (authHeader == null ||
-                !authHeader.startsWith("Bearer ")) {
-
+        // Allow CORS preflight requests
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Extract JWT token
-        final String jwtToken =
-                authHeader.substring(7);
+        String authHeader = request.getHeader("Authorization");
 
-        // Extract username from JWT
-        final String username;
+        // No JWT token → continue normally
+        // This is required for /api/auth/login and /api/auth/register
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String jwt = authHeader.substring(7);
 
         try {
-            username = jwtService.extractUsername(jwtToken);
-        } catch (Exception e) {
-            ///System.out.println("JWT ERROR: " + e.getMessage());
-            e.printStackTrace();
 
-            filterChain.doFilter(request, response);
-            return;
-        }
+            String username = jwtService.extractUsername(jwt);
 
-        // Check if username exists and user is not already authenticated
-        if (username != null &&
-                SecurityContextHolder.getContext()
-                        .getAuthentication() == null) {
+            if (username != null
+                    && SecurityContextHolder.getContext()
+                    .getAuthentication() == null) {
 
-            // Load user from database
-            UserDetails userDetails =
-                    userDetailsService
-                            .loadUserByUsername(username);
+                UserDetails userDetails =
+                        userDetailsService.loadUserByUsername(username);
 
-            // Validate JWT
-            if (jwtService.isTokenValid(
-                    jwtToken,
-                    userDetails)) {
+                if (jwtService.isTokenValid(jwt, userDetails)) {
 
-                // Create authentication object
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
 
-                // Add request details
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource()
-                                .buildDetails(request)
-                );
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource()
+                                    .buildDetails(request)
+                    );
 
-                // Store authentication in SecurityContext
-                SecurityContextHolder
-                        .getContext()
-                        .setAuthentication(authToken);
+                    SecurityContextHolder
+                            .getContext()
+                            .setAuthentication(authToken);
+                }
             }
+
+        } catch (Exception e) {
+            // Invalid JWT → don't authenticate the request.
+            // Spring Security will handle protected endpoints.
         }
 
-        // Continue request
         filterChain.doFilter(request, response);
     }
 }
