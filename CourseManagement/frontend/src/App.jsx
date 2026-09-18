@@ -1,5 +1,6 @@
-
 import { useState } from "react";
+import { Link } from "react-router-dom";
+
 import Login from "./Login";
 import {
     getCourses,
@@ -15,17 +16,15 @@ function App() {
     );
 
     const [courses, setCourses] = useState([]);
-
     const [search, setSearch] = useState("");
-
     const [message, setMessage] = useState("");
 
-    // Add Course states
+    // Add course states
     const [courseName, setCourseName] = useState("");
     const [courseDuration, setCourseDuration] = useState("");
     const [courseFee, setCourseFee] = useState("");
 
-    // Edit Course states
+    // Edit course states
     const [editingId, setEditingId] = useState(null);
     const [editName, setEditName] = useState("");
     const [editDuration, setEditDuration] = useState("");
@@ -33,33 +32,33 @@ function App() {
 
     const token = localStorage.getItem("token");
 
+    // Get role from JWT
+    const getRoleFromToken = () => {
 
-    // Get user role from JWT
-    const getUserRole = () => {
+        const currentToken = localStorage.getItem("token");
 
-        if (!token) {
+        if (!currentToken) {
             return "";
         }
 
         try {
 
             const payload = JSON.parse(
-                atob(token.split(".")[1])
+                atob(currentToken.split(".")[1])
             );
 
             return payload.role || "";
 
         } catch (error) {
 
+            console.error("Invalid JWT:", error);
             return "";
         }
     };
 
+    const role = getRoleFromToken();
 
-    const role = getUserRole();
-
-
-    // Load Courses
+    // Load courses
     const loadCourses = async () => {
 
         try {
@@ -76,30 +75,27 @@ function App() {
         }
     };
 
-
-    // Add Course
+    // Add course
     const handleAddCourse = async (e) => {
 
         e.preventDefault();
 
         try {
 
-            const newCourse = {
+            const course = {
                 name: courseName,
                 duration: courseDuration,
                 fee: Number(courseFee)
             };
 
-            await addCourse(token, newCourse);
+            await addCourse(token, course);
 
             setMessage("Course added successfully!");
 
-            // Clear form
             setCourseName("");
             setCourseDuration("");
             setCourseFee("");
 
-            // Refresh course list
             await loadCourses();
 
         } catch (error) {
@@ -108,55 +104,31 @@ function App() {
         }
     };
 
-
-    // Start Edit
-    const startEdit = (course) => {
+    // Start editing
+    const handleEdit = (course) => {
 
         setEditingId(course.id);
-
-        setEditName(course.name || "");
-        setEditDuration(course.duration || "");
-        setEditFee(course.fee ?? "");
-
-        setMessage("");
+        setEditName(course.name);
+        setEditDuration(course.duration);
+        setEditFee(course.fee);
     };
 
-
-    // Cancel Edit
-    const cancelEdit = () => {
-
-        setEditingId(null);
-
-        setEditName("");
-        setEditDuration("");
-        setEditFee("");
-
-        setMessage("");
-    };
-
-
-    // Update Course
-    const handleUpdateCourse = async (e) => {
-
-        e.preventDefault();
+    // Update course
+    const handleUpdate = async (id) => {
 
         try {
 
-            const updatedCourse = {
+            const course = {
                 name: editName,
                 duration: editDuration,
                 fee: Number(editFee)
             };
 
-            await updateCourse(
-                token,
-                editingId,
-                updatedCourse
-            );
+            await updateCourse(token, id, course);
 
             setMessage("Course updated successfully!");
 
-            cancelEdit();
+            setEditingId(null);
 
             await loadCourses();
 
@@ -166,15 +138,14 @@ function App() {
         }
     };
 
+    // Delete course
+    const handleDelete = async (id) => {
 
-    // Delete Course
-    const handleDeleteCourse = async (id) => {
-
-        const confirmed = window.confirm(
+        const confirmDelete = window.confirm(
             "Are you sure you want to delete this course?"
         );
 
-        if (!confirmed) {
+        if (!confirmDelete) {
             return;
         }
 
@@ -192,60 +163,36 @@ function App() {
         }
     };
 
-
     // Logout
-    const logout = () => {
+    const handleLogout = () => {
 
         localStorage.removeItem("token");
 
         setLoggedIn(false);
-
         setCourses([]);
-
-        setSearch("");
-
         setMessage("");
-
-        setEditingId(null);
     };
 
-
-    // Search / Filter
-    const filteredCourses = courses.filter((course) =>
-        course.name
-            ?.toLowerCase()
-            .includes(search.toLowerCase())
-    );
-
-
-    // Login Page
+    // If not logged in
     if (!loggedIn) {
-
         return <Login />;
     }
 
+    // Search/filter courses
+    const filteredCourses = courses.filter((course) =>
+        course.name
+            .toLowerCase()
+            .includes(search.toLowerCase())
+    );
 
-    // Dashboard
     return (
-
         <div>
 
-            <h1>
-                Course Management Dashboard
-            </h1>
-
-
-            {/* Logged-in User */}
+            <h1>Course Management Dashboard</h1>
 
             <p>
-                Logged in as:{" "}
-                <strong>
-                    {role || "User"}
-                </strong>
+                Logged in as: <strong>{role}</strong>
             </p>
-
-
-            {/* Dashboard Buttons */}
 
             <button onClick={loadCourses}>
                 Load Courses
@@ -253,132 +200,83 @@ function App() {
 
             {" "}
 
-            <button onClick={logout}>
+            <button onClick={handleLogout}>
                 Logout
             </button>
 
-
-            {/* Message */}
-
-            <p>
-                {message}
-            </p>
-
+            <p>{message}</p>
 
             <hr />
 
-
-            {/* Courses */}
-
-            <h2>
-                Courses
-            </h2>
-
+            <h2>Courses</h2>
 
             {/* Search */}
-
             <input
                 type="text"
                 placeholder="Search courses..."
                 value={search}
-                onChange={(e) =>
-                    setSearch(e.target.value)
-                }
+                onChange={(e) => setSearch(e.target.value)}
             />
 
-
             <br />
             <br />
 
-
-            {/* ADMIN CONTROLS */}
-
+            {/* Admin Controls */}
             {role === "ADMIN" && (
 
                 <div>
 
-                    <h3>
-                        Admin Controls
-                    </h3>
+                    <h2>Admin Controls</h2>
 
-
-                    {/* ADD COURSE */}
-
-                    <h4>
-                        Add New Course
-                    </h4>
-
+                    <h3>Add New Course</h3>
 
                     <form onSubmit={handleAddCourse}>
 
                         <div>
-
-                            <label>
-                                Course Name:{" "}
-                            </label>
+                            <label>Course Name: </label>
 
                             <input
                                 type="text"
                                 value={courseName}
                                 onChange={(e) =>
-                                    setCourseName(
-                                        e.target.value
-                                    )
+                                    setCourseName(e.target.value)
                                 }
                                 required
                             />
-
                         </div>
-
 
                         <br />
 
-
                         <div>
-
-                            <label>
-                                Duration:{" "}
-                            </label>
+                            <label>Duration: </label>
 
                             <input
                                 type="text"
                                 value={courseDuration}
                                 onChange={(e) =>
-                                    setCourseDuration(
-                                        e.target.value
-                                    )
+                                    setCourseDuration(e.target.value)
                                 }
                                 required
                             />
-
                         </div>
-
 
                         <br />
 
-
                         <div>
-
-                            <label>
-                                Fee:{" "}
-                            </label>
+                            <label>Fee: </label>
 
                             <input
                                 type="number"
                                 value={courseFee}
                                 onChange={(e) =>
-                                    setCourseFee(
-                                        e.target.value
-                                    )
+                                    setCourseFee(e.target.value)
                                 }
+                                min="1"
                                 required
                             />
-
                         </div>
 
-
                         <br />
-
 
                         <button type="submit">
                             Add Course
@@ -389,224 +287,162 @@ function App() {
                 </div>
             )}
 
-
-            {/* USER CONTROLS */}
-
-            {role !== "ADMIN" && (
-
-                <div>
-
-                    <h3>
-                        User Controls
-                    </h3>
-
-                    <p>
-                        You have permission to view courses.
-                    </p>
-
-                </div>
-            )}
-
-
             <hr />
 
+            {/* Course List */}
+            {filteredCourses.length === 0 ? (
 
-            {/* COURSE LIST */}
-
-            {courses.length === 0 ? (
-
-                <p>
-                    No courses loaded.
-                </p>
-
-            ) : filteredCourses.length === 0 ? (
-
-                <p>
-                    No matching courses found.
-                </p>
+                <p>No courses loaded.</p>
 
             ) : (
 
-                <ul>
+                <div>
 
                     {filteredCourses.map((course) => (
 
-                        <li key={course.id}>
+                        <div key={course.id}>
 
-                            <strong>
-                                {course.name}
-                            </strong>
-
-                            {" - "}
-
-                            Duration:{" "}
-                            {course.duration}
-
-                            {" - "}
-
-                            Fee: ₹{course.fee}
-
-
-                            {/* ADMIN BUTTONS */}
-
-                            {role === "ADMIN" && (
-
-                                <span>
-
-                                    {" "}
-
-                                    <button
-                                        onClick={() =>
-                                            startEdit(course)
-                                        }
-                                    >
-                                        Edit
-                                    </button>
-
-                                    {" "}
-
-                                    <button
-                                        onClick={() =>
-                                            handleDeleteCourse(
-                                                course.id
-                                            )
-                                        }
-                                    >
-                                        Delete
-                                    </button>
-
-                                </span>
-                            )}
-
-
-                            {/* PAYMENT STATUS */}
-
-                            <br />
-
-                            <strong>
-                                Payment Status:
-                            </strong>{" "}
-                            Pending
-
-                            {" "}
-
-                            <a
-                                href={`/payment/${course.id}`}
-                            >
-                                View Payment
-                            </a>
-
-
-                            {/* EDIT FORM */}
-
-                            {editingId === course.id && (
+                            {editingId === course.id ? (
 
                                 <div>
 
+                                    <h3>Edit Course</h3>
+
+                                    <div>
+                                        <label>Name: </label>
+
+                                        <input
+                                            type="text"
+                                            value={editName}
+                                            onChange={(e) =>
+                                                setEditName(e.target.value)
+                                            }
+                                        />
+                                    </div>
+
                                     <br />
 
-                                    <h4>
-                                        Edit Course
-                                    </h4>
+                                    <div>
+                                        <label>Duration: </label>
 
+                                        <input
+                                            type="text"
+                                            value={editDuration}
+                                            onChange={(e) =>
+                                                setEditDuration(
+                                                    e.target.value
+                                                )
+                                            }
+                                        />
+                                    </div>
 
-                                    <form
-                                        onSubmit={
-                                            handleUpdateCourse
+                                    <br />
+
+                                    <div>
+                                        <label>Fee: </label>
+
+                                        <input
+                                            type="number"
+                                            value={editFee}
+                                            onChange={(e) =>
+                                                setEditFee(e.target.value)
+                                            }
+                                            min="1"
+                                        />
+                                    </div>
+
+                                    <br />
+
+                                    <button
+                                        onClick={() =>
+                                            handleUpdate(course.id)
                                         }
                                     >
+                                        Save
+                                    </button>
+
+                                    {" "}
+
+                                    <button
+                                        onClick={() =>
+                                            setEditingId(null)
+                                        }
+                                    >
+                                        Cancel
+                                    </button>
+
+                                </div>
+
+                            ) : (
+
+                                <div>
+
+                                    <h3>{course.name}</h3>
+
+                                    <p>
+                                        <strong>ID:</strong>{" "}
+                                        {course.id}
+                                    </p>
+
+                                    <p>
+                                        <strong>Duration:</strong>{" "}
+                                        {course.duration}
+                                    </p>
+
+                                    <p>
+                                        <strong>Fee:</strong>{" "}
+                                        ₹{course.fee}
+                                    </p>
+
+                                    <p>
+                                        <strong>Payment Status:</strong>{" "}
+                                        Pending
+                                    </p>
+
+                                    {/* Admin buttons */}
+                                    {role === "ADMIN" && (
 
                                         <div>
 
-                                            <label>
-                                                Course Name:{" "}
-                                            </label>
-
-                                            <input
-                                                type="text"
-                                                value={editName}
-                                                onChange={(e) =>
-                                                    setEditName(
-                                                        e.target.value
-                                                    )
+                                            <button
+                                                onClick={() =>
+                                                    handleEdit(course)
                                                 }
-                                                required
-                                            />
+                                            >
+                                                Edit
+                                            </button>
+
+                                            {" "}
+
+                                            <button
+                                                onClick={() =>
+                                                    handleDelete(course.id)
+                                                }
+                                            >
+                                                Delete
+                                            </button>
 
                                         </div>
+                                    )}
 
+                                    <br />
 
-                                        <br />
-
-
-                                        <div>
-
-                                            <label>
-                                                Duration:{" "}
-                                            </label>
-
-                                            <input
-                                                type="text"
-                                                value={editDuration}
-                                                onChange={(e) =>
-                                                    setEditDuration(
-                                                        e.target.value
-                                                    )
-                                                }
-                                                required
-                                            />
-
-                                        </div>
-
-
-                                        <br />
-
-
-                                        <div>
-
-                                            <label>
-                                                Fee:{" "}
-                                            </label>
-
-                                            <input
-                                                type="number"
-                                                value={editFee}
-                                                onChange={(e) =>
-                                                    setEditFee(
-                                                        e.target.value
-                                                    )
-                                                }
-                                                required
-                                            />
-
-                                        </div>
-
-
-                                        <br />
-
-
-                                        <button type="submit">
-                                            Save Changes
-                                        </button>
-
-                                        {" "}
-
-                                        <button
-                                            type="button"
-                                            onClick={cancelEdit}
-                                        >
-                                            Cancel
-                                        </button>
-
-                                    </form>
+                                    {/* Payment Route */}
+                                    <Link
+                                        to={`/payment/${course.id}`}
+                                    >
+                                        View Payment
+                                    </Link>
 
                                 </div>
                             )}
 
-                        </li>
+                            <hr />
+
+                        </div>
                     ))}
 
-                </ul>
+                </div>
             )}
 
         </div>
@@ -614,4 +450,3 @@ function App() {
 }
 
 export default App;
-
