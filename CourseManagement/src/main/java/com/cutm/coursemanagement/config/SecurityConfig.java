@@ -3,7 +3,6 @@ package com.cutm.coursemanagement.config;
 import com.cutm.coursemanagement.security.JwtAuthenticationFilter;
 
 import org.springframework.beans.factory.annotation.Value;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,7 +12,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-
 import org.springframework.security.config.http.SessionCreationPolicy;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -36,9 +34,7 @@ public class SecurityConfig {
     @Value("${app.cors.allowed-origins:http://localhost:5173}")
     private String allowedOrigins;
 
-    public SecurityConfig(
-            JwtAuthenticationFilter jwtAuthenticationFilter
-    ) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
@@ -51,8 +47,7 @@ public class SecurityConfig {
     // Authentication Manager
     @Bean
     public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration configuration
-    ) throws Exception {
+            AuthenticationConfiguration configuration) throws Exception {
 
         return configuration.getAuthenticationManager();
     }
@@ -60,8 +55,7 @@ public class SecurityConfig {
     // Security Configuration
     @Bean
     public SecurityFilterChain securityFilterChain(
-            HttpSecurity http
-    ) throws Exception {
+            HttpSecurity http) throws Exception {
 
         http
                 // Enable CORS
@@ -70,17 +64,17 @@ public class SecurityConfig {
                 // Disable CSRF because we are using JWT
                 .csrf(csrf -> csrf.disable())
 
-                // JWT authentication does not use sessions
+                // JWT based authentication
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
 
+                // Authorization rules
                 .authorizeHttpRequests(auth -> auth
 
-                        // IMPORTANT:
-                        // Allow browser CORS preflight requests
+                        // CORS preflight requests
                         .requestMatchers(
                                 HttpMethod.OPTIONS,
                                 "/**"
@@ -102,23 +96,25 @@ public class SecurityConfig {
                                 "/courses/admin"
                         ).hasRole("ADMIN")
 
-                        // Admin course operations
+                        // Add course
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/courses/**"
                         ).hasRole("ADMIN")
 
+                        // Update course
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/courses/**"
                         ).hasRole("ADMIN")
 
+                        // Delete course
                         .requestMatchers(
                                 HttpMethod.DELETE,
                                 "/courses/**"
                         ).hasRole("ADMIN")
 
-                        // Course viewing
+                        // Get courses
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/courses/**"
@@ -128,7 +124,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-                // Add JWT filter
+                // JWT filter
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
