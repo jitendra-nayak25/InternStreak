@@ -1,5 +1,7 @@
 package com.cutm.coursemanagement.config;
 
+import org.springframework.beans.factory.annotation.Value;
+import java.util.Arrays;
 import com.cutm.coursemanagement.security.JwtAccessDeniedHandler;
 import com.cutm.coursemanagement.security.JwtAuthenticationEntryPoint;
 import com.cutm.coursemanagement.security.JwtAuthenticationFilter;
@@ -43,6 +45,10 @@ public class SecurityConfig {
         this.accessDeniedHandler = accessDeniedHandler;
     }
 
+    @Value("${app.cors.allowed-origins:http://localhost:5173}")
+    private String allowedOrigins;
+
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -62,7 +68,9 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
-                java.util.List.of("http://localhost:5173")
+                Arrays.stream(allowedOrigins.split(","))
+                        .map(String::trim)
+                        .toList()
         );
 
         configuration.setAllowedMethods(
