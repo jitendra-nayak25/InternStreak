@@ -35,6 +35,19 @@ public class JwtService {
 
         Map<String, Object> claims = new HashMap<>();
 
+        // Add user's role to JWT
+        String role = userDetails.getAuthorities()
+                .stream()
+                .findFirst()
+                .map(authority -> authority.getAuthority())
+                .orElse("");
+
+        if (role.startsWith("ROLE_")) {
+            role = role.substring(5);
+        }
+
+        claims.put("role", role);
+
         return Jwts.builder()
                 .claims(claims)
                 .subject(userDetails.getUsername())
