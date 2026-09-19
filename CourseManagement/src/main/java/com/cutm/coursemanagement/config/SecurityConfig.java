@@ -143,7 +143,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(
                 Arrays.asList(
                         "http://localhost:5173",
-                        "https://intern-streak2-nilschb8z-jitendra-2003dots-projects.vercel.app"
+                        "https://intern-streak2-nilschb8z-jitendra-2003dots-projects.vercel.app",
+                        "https://intern-streak2-6vt6vzh12-jitendra-2003dots-projects.vercel.app"
                 )
         );
 
